@@ -17,11 +17,16 @@ namespace MyEvernote.View
     /// <summary>
     /// Lógica interna para NoteWindow.xaml
     /// </summary>
-    public partial class NoteWindow : Window
+    public partial class NotesWindow : Window
     {
-        public NoteWindow()
+        public NotesWindow()
         {
             InitializeComponent();
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
