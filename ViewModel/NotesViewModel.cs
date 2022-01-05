@@ -1,5 +1,7 @@
 ﻿using MyEvernote.Auxiliary;
 using MyEvernote.Model;
+using MyEvernote.ViewModel.Helpers;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -28,7 +30,7 @@ namespace MyEvernote.ViewModel
         {
             get
             {
-                return newNotebook = newNotebook ?? new RelayCommand(x => NewNotebookButton());
+                return newNotebook ??(newNotebook = new RelayCommand(x => NewNotebookButton()));
             }
         }
 
@@ -38,18 +40,44 @@ namespace MyEvernote.ViewModel
         {
             get
             {
-                return newNote = newNote ?? new RelayCommand(x => NewNoteButton());
+                return newNote ?? (newNote = new RelayCommand((object parameter) => NewNoteButton(parameter),
+                    (object parameter) => (CanExecute(parameter))));
             }
         }
 
-        void NewNotebookButton()
+        private void NewNotebookButton()
         {
+            Notebook localNotebook = new Notebook()
+            {
+                Name = "New Notebook",
+            };
 
+            DataBaseHelper.Insert(localNotebook);
         }
 
-        void NewNoteButton()
+        private readonly Predicate<object> CanExecute = delegate (object parameter)
         {
+            bool returnValue = false;
+            if (parameter is Notebook localNotebook)
+            {
+                returnValue = true;
+            }
+           return returnValue;
 
+        };
+        private void NewNoteButton(object parameter)
+        {
+            Notebook localNotebook = parameter as Notebook;
+
+            Note newNote = new Note()
+            {
+                NotebookId = localNotebook.Id,
+                CreatedAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
+                Title = "New Note"
+            };
+
+            DataBaseHelper.Insert(newNote);
         }
 
     }
