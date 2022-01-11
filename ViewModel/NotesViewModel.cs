@@ -3,15 +3,28 @@ using MyEvernote.Model;
 using MyEvernote.ViewModel.Helpers;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 
 namespace MyEvernote.ViewModel
 {
-    public class NotesViewModel
+    public class NotesViewModel: INotifyPropertyChanged
     {
-        private ObservableCollection<Notebook> Notebooks { get; set; }
+        public ObservableCollection<Notebook> Notebooks { get; set; }
+        public ObservableCollection<Note> Notes { get; set; }
 
         private Notebook selectedNotebook;
+
+        private ICommand speechCommand;
+
+        public ICommand SpeechCommand
+        {
+            get
+            {
+                return speechCommand ?? (speechCommand = new RelayCommand(x => { }));
+            }
+        }
 
         public Notebook SelectedNotebook
         {
@@ -19,66 +32,101 @@ namespace MyEvernote.ViewModel
             set
             {
                 selectedNotebook = value;
-                //TODO: 
+                OnPropertyChanged(nameof(SelectedNotebook));
+                GetNotes();
             }
         }
 
-        public ObservableCollection<Note> Notes { get; set; }
-        private ICommand newNotebook;
+        private ICommand newNotebookCommand;
 
         public ICommand NewNotebookCommand
         {
             get
             {
-                return newNotebook ??(newNotebook = new RelayCommand(x => NewNotebookButton()));
+                return newNotebookCommand ?? (newNotebookCommand =
+                    new RelayCommand(
+                        _ => AddNotebookAction(_))
+                    );
             }
         }
 
-        private ICommand newNote;
+        private ICommand newNoteCommand;
 
         public ICommand NewNoteCommand
         {
             get
             {
-                return newNote ?? (newNote = new RelayCommand((object parameter) => NewNoteButton(parameter),
-                    (object parameter) => (CanExecute(parameter))));
+                return newNoteCommand ?? (newNoteCommand = new RelayCommand(
+                    (x) => AddNoteAction(x),
+                    (x) => x is Notebook)
+                    );
             }
         }
 
-        private void NewNotebookButton()
+        private readonly Action<object> AddNotebookAction = delegate (object parameter)
         {
             Notebook localNotebook = new Notebook()
             {
                 Name = "New Notebook",
             };
 
-            DataBaseHelper.Insert(localNotebook);
-        }
+            _ = DataBaseHelper.Insert(localNotebook);
+        };
 
-        private readonly Predicate<object> CanExecute = delegate (object parameter)
+        private readonly Action<object> AddNoteAction = delegate (object parameter)
         {
-            bool returnValue = false;
             if (parameter is Notebook localNotebook)
             {
-                returnValue = true;
+                Note newNote = new Note()
+                {
+                    NotebookId = localNotebook.Id,
+                    CreatedAt = DateTime.Now,
+                    UpdateAt = DateTime.Now,
+                    Title = "New Note"
+                };
+
+                _ = DataBaseHelper.Insert(newNote);
             }
-           return returnValue;
-
         };
-        private void NewNoteButton(object parameter)
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public NotesViewModel ()
         {
-            Notebook localNotebook = parameter as Notebook;
+            Notebooks = new ObservableCollection<Notebook>();
+            Notes = new ObservableCollection<Note>();
 
-            Note newNote = new Note()
-            {
-                NotebookId = localNotebook.Id,
-                CreatedAt = DateTime.Now,
-                UpdateAt = DateTime.Now,
-                Title = "New Note"
-            };
-
-            DataBaseHelper.Insert(newNote);
+            GetNotebooks();
         }
 
+        private void GetNotebooks()
+        {
+            var localNotebooks = DataBaseHelper.Read<Notebook>();
+            Notebooks.Clear();
+
+            foreach (Notebook notebook in localNotebooks)
+            {
+                Notebooks.Add(notebook);
+            }
+        }
+
+        private void GetNotes()
+        {
+            if(SelectedNotebook is object)
+            {
+                var localNotes = DataBaseHelper.Read<Note>().Where(n => n.NotebookId == SelectedNotebook.Id).ToList();
+                Notes.Clear();
+
+                foreach (Note note in localNotes)
+                {
+                    Notes.Add(note);
+                }
+            }
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
