@@ -1,0 +1,13 @@
+﻿[*.cs]
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = silent
+
+# IDE0025: Usar o corpo da expressão para propriedades
+dotnet_diagnostic.IDE0025.severity = silent
+
+# IDE0025: Usar o corpo da expressão para propriedades
+csharp_style_expression_bodied_properties = false
+
+# IDE0027: Usar o corpo da expressão para acessadores
+csharp_style_expression_bodied_accessors = false

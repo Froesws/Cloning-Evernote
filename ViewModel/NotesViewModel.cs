@@ -1,6 +1,7 @@
 ﻿using MyEvernote.Auxiliary;
 using MyEvernote.Model;
 using MyEvernote.ViewModel.Helpers;
+
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,7 +10,7 @@ using System.Windows.Input;
 
 namespace MyEvernote.ViewModel
 {
-    public class NotesViewModel: INotifyPropertyChanged
+    public class NotesViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Notebook> Notebooks { get; set; }
         public ObservableCollection<Note> Notes { get; set; }
@@ -32,8 +33,8 @@ namespace MyEvernote.ViewModel
             set
             {
                 selectedNotebook = value;
-                OnPropertyChanged(nameof(SelectedNotebook));
                 GetNotes();
+                OnPropertyChanged(nameof(SelectedNotebook));
             }
         }
 
@@ -45,7 +46,7 @@ namespace MyEvernote.ViewModel
             {
                 return newNotebookCommand ?? (newNotebookCommand =
                     new RelayCommand(
-                        _ => AddNotebookAction(_))
+                        _ => AddNotebookAction())
                     );
             }
         }
@@ -63,7 +64,7 @@ namespace MyEvernote.ViewModel
             }
         }
 
-        private readonly Action<object> AddNotebookAction = delegate (object parameter)
+        private void AddNotebookAction()
         {
             Notebook localNotebook = new Notebook()
             {
@@ -71,9 +72,11 @@ namespace MyEvernote.ViewModel
             };
 
             _ = DataBaseHelper.Insert(localNotebook);
-        };
 
-        private readonly Action<object> AddNoteAction = delegate (object parameter)
+            GetNotebooks();
+        }
+
+        private void AddNoteAction (object parameter)
         {
             if (parameter is Notebook localNotebook)
             {
@@ -86,12 +89,14 @@ namespace MyEvernote.ViewModel
                 };
 
                 _ = DataBaseHelper.Insert(newNote);
+
+                GetNotes();
             }
-        };
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public NotesViewModel ()
+        public NotesViewModel()
         {
             Notebooks = new ObservableCollection<Notebook>();
             Notes = new ObservableCollection<Note>();
@@ -101,7 +106,7 @@ namespace MyEvernote.ViewModel
 
         private void GetNotebooks()
         {
-            var localNotebooks = DataBaseHelper.Read<Notebook>();
+            System.Collections.Generic.IList<Notebook> localNotebooks = DataBaseHelper.Read<Notebook>();
             Notebooks.Clear();
 
             foreach (Notebook notebook in localNotebooks)
@@ -112,9 +117,9 @@ namespace MyEvernote.ViewModel
 
         private void GetNotes()
         {
-            if(SelectedNotebook is object)
+            if (SelectedNotebook is object)
             {
-                var localNotes = DataBaseHelper.Read<Note>().Where(n => n.NotebookId == SelectedNotebook.Id).ToList();
+                System.Collections.Generic.List<Note> localNotes = DataBaseHelper.Read<Note>().Where(n => n.NotebookId == SelectedNotebook.Id).ToList();
                 Notes.Clear();
 
                 foreach (Note note in localNotes)
