@@ -17,16 +17,6 @@ namespace MyEvernote.ViewModel
 
         private Notebook selectedNotebook;
 
-        private ICommand speechCommand;
-
-        public ICommand SpeechCommand
-        {
-            get
-            {
-                return speechCommand ?? (speechCommand = new RelayCommand(x => { }));
-            }
-        }
-
         public Notebook SelectedNotebook
         {
             get { return selectedNotebook; }
@@ -76,7 +66,7 @@ namespace MyEvernote.ViewModel
             GetNotebooks();
         }
 
-        private void AddNoteAction (object parameter)
+        private void AddNoteAction(object parameter)
         {
             if (parameter is Notebook localNotebook)
             {
@@ -103,6 +93,7 @@ namespace MyEvernote.ViewModel
 
             GetNotebooks();
         }
+
 
         private void GetNotebooks()
         {
