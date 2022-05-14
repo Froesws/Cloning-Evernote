@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -28,7 +29,7 @@ namespace MyEvernote.View
             InitializeComponent();
             try
             {
-                var currentCulture = (from r in SpeechRecognitionEngine.InstalledRecognizers()
+                RecognizerInfo currentCulture = (from r in SpeechRecognitionEngine.InstalledRecognizers()
                                       where r.Culture.Equals(Thread.CurrentThread.CurrentCulture)
                                       select r).FirstOrDefault();
 
@@ -69,7 +70,16 @@ namespace MyEvernote.View
 
         private void boldButton_Click(object sender, RoutedEventArgs e)
         {
-            contentRichTextBox.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
+            bool isChecked = (sender as ToggleButton).IsChecked ?? false;
+
+            if (isChecked)
+            {
+                contentRichTextBox.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
+            }
+            else
+            {
+                contentRichTextBox.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
+            }
         }
 
         private bool isRecognizing = false;
@@ -92,6 +102,12 @@ namespace MyEvernote.View
             {
 
             }
+        }
+
+        private void contentRichTextBox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            var selectedWeight = contentRichTextBox.Selection.GetPropertyValue(FontWeightProperty);
+            boldButton.IsChecked = (selectedWeight != DependencyProperty.UnsetValue) && selectedWeight.Equals(FontWeights.Bold);
         }
     }
 }
